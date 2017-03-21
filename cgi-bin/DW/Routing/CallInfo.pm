@@ -154,7 +154,7 @@ Returns the API version requested.
 
 =cut
 
-sub apiver { 
+sub apiver {
     return $_[0]->{apiver};
  }
 

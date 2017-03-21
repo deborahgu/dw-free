@@ -553,7 +553,7 @@ sub register_api_endpoint {
     croak 'register_api_endpoint must have version option'
         unless exists $opts{version};
 
-    my $hash = _apply_defaults( \%opts, {
+    my $endpoint_opts = _apply_defaults( \%opts, {
         sub    => $sub,
         format => 'json',
     });
@@ -564,7 +564,7 @@ sub register_api_endpoint {
         if grep { $_ <= 0 } @$vers;
 
     # Now register this string at all versions that they gave us.
-    $api_endpoints{$_}->{$string} = $hash
+    $api_endpoints{$_}->{$string} = $endpoint_opts
         foreach @$vers;
 }
 
@@ -576,7 +576,7 @@ sub register_api_endpoints {
     }
 }
 
-=head2 C<< $class->register_api_rest_endpoint( $string, $sub, %opts ) >>
+=head2 C<< $class->register_api_rest_endpoint( $string, $sub, $controller_class, %opts ) >>
 
 =over
 
@@ -593,25 +593,27 @@ sub register_api_endpoints {
 sub register_api_rest_endpoint {
     my ( $class, $string, $sub, $controller_class, %opts ) = @_;
 
-    # this is dev only for now -akp
+    # FIXME: remove when this goes to production
     return unless $LJ::IS_DEV_SERVER;
-    
+
+    # All our APIs are versioned
     croak 'register_api_rest_endpoint must have version option'
         unless exists $opts{version};
 
-    my $hash = _apply_defaults( \%opts, {
-        class  => $controller_class,
-        sub    => $sub,
-        format => 'json',
+    my $endpoint_opts = _apply_defaults( \%opts, {
+        class  => $controller_class,    # class to register the endpoints for
+        sub    => $sub,                 # item or list dispatcher
+        format => 'json',               # output format
     });
 
+    # Get the API version
     my $vers = ref $opts{version} eq 'ARRAY' ? $opts{version} :
         [ $opts{version} + 0 ];
     croak 'register_api_version requires all versions >= 1'
         if grep { $_ <= 0 } @$vers;
 
     # Now register this string at all versions that they gave us.
-    $api_rest_endpoints{$_}->{$string} = $hash
+    $api_rest_endpoints{$_}->{$string} = $endpoint_opts
         foreach @$vers;
 }
 
@@ -619,6 +621,8 @@ sub register_api_rest_endpoint {
 sub register_api_rest_endpoints {
     my $class = shift;
     foreach my $row ( @_ ) {
+        # FIXME: remove debugging log messages before prod
+        warn("register rest endpoint for\n    $row->[0]\n    $row->[1]\n    $row->[2]\n    $row->[3]");
         $class->register_api_rest_endpoint( $row->[0], $row->[1], $row->[2], version => $row->[3] );
     }
 }

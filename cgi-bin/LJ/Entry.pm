@@ -1288,11 +1288,11 @@ sub put_logprop_in_history {
 }
 
 # convert to json
-sub TO_JSON { 
+sub TO_JSON {
     my $self = shift;
 
     my $remote = LJ::get_remote();
-    my $returnval = { 
+    my $returnval = {
         poster => $self->poster->username,
         ditemid => $self->ditemid,
         subject => $self->subject_raw,

@@ -1299,11 +1299,11 @@ sub separate_keywords {
 }
 
 # convert to json
-sub TO_JSON { 
+sub TO_JSON {
     my $self = shift;
 
     my $remote = LJ::get_remote();
-    my $returnval = { 
+    my $returnval = {
         username => $self->u->user,
         picid => $self->picid,
         keywords => $self->keywords,

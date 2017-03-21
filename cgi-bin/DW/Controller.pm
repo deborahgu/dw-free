@@ -98,10 +98,12 @@ sub render_success {
 #
 # Returned hashref can be passed to DW::Template->render_template as the 2nd
 # argument, and has the following keys:
-# - remote -- the remote user object or undef (LJ::get_remote())
-# - u -- user object for username in ?user= or ?authas= if present and valid,
-#        otherwise same as remote
+# - remote      -- the remote user object or undef (LJ::get_remote())
+# - u           -- user object for username in ?user= or ?authas= if present and valid,
+#                  otherwise same as remote
 # - authas_html -- HTML for the "switch user" form
+# - r           -- A DW:Request object (abstraction layer on the Apache request)
+# - post_args   -- Any arguments attached to a POST request, if relevant
 sub controller {
     my ( %args ) = @_;
 
@@ -122,6 +124,7 @@ sub controller {
     # necessary as most pages require a user
     $vars->{u} = $vars->{remote} = LJ::get_remote();
 
+    # include the request object
     my $r = DW::Request->get;
     $vars->{r} = $r;
 
@@ -134,6 +137,7 @@ sub controller {
         }
     }
 
+    # if anonymous calls aren't permitted, fail if not logged in
     unless ( $args{anonymous} ) {
         $vars->{remote}
             or return $fail->( needlogin() );
@@ -201,6 +205,7 @@ sub controller {
             unless $has_one;
     }
 
+    # any arguments attached to a valid POST request
     if ( $r->did_post && $args{form_auth} ) {
         my $post_args = $r->post_args || {};
         return $fail->( error_ml( 'error.invalidform' ) )

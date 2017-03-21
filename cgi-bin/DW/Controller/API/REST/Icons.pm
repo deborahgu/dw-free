@@ -27,7 +27,7 @@ use JSON;
 # register the endpoints
 __PACKAGE__->register_rest_controller( '^/users/([^/]*)/icons', 1 );
 
-# 
+#
 sub rest_get_list {
     warn("icon list handler!");
     my ( $self, $opts, $username ) = @_;
@@ -42,7 +42,7 @@ sub rest_get_list {
     return $self->rest_ok( \@icons );
 }
 
-# 
+#
 sub rest_get_item {
     my ( $self, $opts, $username, $picid ) = @_;
     warn("icon itom handler!");

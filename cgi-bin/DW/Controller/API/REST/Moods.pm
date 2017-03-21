@@ -29,7 +29,7 @@ __PACKAGE__->register_rest_controller( '^/moods', 1 );
 
 sub rest_get_list {
     my $self = @_[0];
-    
+
     # we want to handle the not logged in case ourselves
     my ( $ok, $rv ) = controller( anonymous => 1 );
     return $rv unless $ok;

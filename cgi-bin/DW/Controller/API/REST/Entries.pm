@@ -2,17 +2,22 @@
 #
 # DW::Controller::API::REST::Entries
 #
-# API controls for entries
+# API controls for entries.
+# Entries corresponds with "Journal" and not with "User"
+# Because entires are a component of a single-user or community journal.
 #
 # Authors:
-#      Allen Petersen <allen@suberic.net>
+#      Allen Petersen <allen@suberic.net>, Deborah Kaplan <deborah@dreamwidth.org>
 #
-# Copyright (c) 2016 by Dreamwidth Studios, LLC.
+# Copyright (c) 2017 by Dreamwidth Studios, LLC.
 #
 # This program is free software; you may redistribute it and/or modify it under
 # the same terms as Perl itself. For a copy of the license, please reference
 # 'perldoc perlartistic' or 'perldoc perlgpl'.
 #
+
+# FIXME: this file needs pod. APIs need to be self-documenting.
+# FIXME: hitting endpoints without parameters should generate documentation from the pod.
 
 package DW::Controller::API::REST::Entries;
 use base 'DW::Controller::API::REST';
@@ -24,17 +29,20 @@ use DW::Request;
 use DW::Controller;
 use JSON;
 
-__PACKAGE__->register_rest_controller( '^/journals/([^/]*)/entries', 1 );
+__PACKAGE__->register_rest_controller( '^/journals/([^/]*)/entries', 2 );
 
+# GET method for a list of entries
+# Usage: /journals/{journal name}/entries
 sub rest_get_list {
     my ( $self, $opts, $journalname ) = @_;
+    # anonymous (non-authenticated) calls are permitted
     my ( $ok, $rv ) = controller( anonymous => 1 );
 
     my $journal = LJ::load_user( $journalname );
     return $self->rest_error( "No such user: $journalname" ) unless $journal;
-    
+
     my $skip = 0;
-   
+
     my $itemshow = 25;
     my $viewall = 1;
     my @itemids;
@@ -65,15 +73,20 @@ sub rest_get_list {
 
 
 sub rest_get_item {
+    warn("got here");
     my ( $self, $opts, $journalname, $ditemid ) = @_;
+    warn("got here:\n $self\n $opts\n $journalname\n $ditemid");
+    # anonymous (non-authenticated) calls are permitted
     my ( $ok, $rv ) = controller( anonymous => 1 );
+    warn("got controller");
 
     my $journal = LJ::load_user( $journalname );
+    warn("got journal");
     return $self->rest_error( "No such user: $journalname" ) unless $journal;
 
     my $item = LJ::Entry->new($journal, ditemid => $ditemid);
     return $self->rest_error( "No such item $ditemid in journal $journalname" ) unless $item;
-    
+
     return $self->rest_ok( $item );
 
 }
