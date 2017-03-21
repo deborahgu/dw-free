@@ -75,11 +75,11 @@ my %host_path_match = (
     # forms arent being allowed for security concerns.
     "docs.google.com"       => [ qr!^/(document|spreadsheets?|presentation)/!, 1 ],
     "books.google.com"      => [ qr!^/ngrams/!, 1 ],
-    
-    "jsfiddle.net"          => [ qr!/embedded/$!, 1 ],
 
     "imgur.com"             => [ qr!^/a/.+?/embed!, 1 ],
     "instagram.com"         => [ qr!^/p/.*/embed/$!, 1 ],
+
+    "jsfiddle.net"          => [ qr!/embedded/$!, 1 ],
 
     "www.kickstarter.com"   => [ qr!/widget/[a-zA-Z]+\.html$!, 1 ],
 
@@ -92,6 +92,7 @@ my %host_path_match = (
     "www.plurk.com"         => [ qr!^/getWidget$!, 1 ],
 
     "www.sbs.com.au"        => [ qr!/player/embed/!, 0 ],  # best guess; language parameter before /player may vary
+    "scratch.mit.edu"       => [ qr!^/projects/embed/!, 1 ],
     "www.scribd.com"        => [ qr!^/embeds/!, 1 ],
     "www.slideshare.net"    => [ qr!^/slideshow/embed_code/!, 1 ],
     "w.soundcloud.com"      => [ qr!^/player/!, 1 ],

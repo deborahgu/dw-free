@@ -309,6 +309,7 @@
             'makepoll' => 0,
             'maxcomments' => 10000,
             'maxfriends' => 500,
+            'media_file_quota' => 500, # megabytes
             'mod_queue' => 50,
             'mod_queue_per_poster' => 5,
             'moodthemecreate' => 0,
@@ -580,18 +581,6 @@
     #        'your_class' => 3,  # define any special MogileFS classes you need
     #    },
     #);
-
-    # If you have multiple internal networks and would like the MogileFS libraries
-    # to pick one network over the other, you can set the preferred IP list...
-    #%MOGILEFS_PREF_IP = (
-    #    10.0.0.1 => 10.10.0.1,
-    #);
-    #That says "if we try to connect to 10.0.0.1, instead try 10.10.0.1 first and
-    #then fall back to 10.0.0.1".
-
-    # In addition to setting up MogileFS above, you need to enable some options
-    # if you want to use MogileFS.
-    #$USERPIC_MOGILEFS = 1; # uncomment to put new userpics in MogileFS
 
     # Some people on portable devices may have troubles viewing the nice site
     # scheme you've setup, so you can specify that some user-agent prefixes

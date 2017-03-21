@@ -15,7 +15,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 64;
+use Test::More tests => 66;
 
 BEGIN { $LJ::_T_CONFIG = 1; require "$ENV{LJHOME}/cgi-bin/ljlib.pl"; }
 
@@ -113,6 +113,7 @@ note( "misc" );
 
     # J
     test_good_url( "//www.jigsawplanet.com/?rc=play&amp;pid=35458f1355c4&amp;view=iframe" );
+    test_good_url( "//jsfiddle.net/5c0ruh8s/10/embedded/" );
 
     # K
     test_good_url( "http://www.kickstarter.com/projects/25352323/arrival-a-short-film-by-alex-myung/widget/video.html" );
@@ -134,6 +135,7 @@ note( "misc" );
 
     # S
     test_good_url( "http://www.sbs.com.au/yourlanguage//player/embed/id/163111" );
+    test_good_url( "//scratch.mit.edu/projects/embed/144290094/?autostart=false" );
     test_good_url( "http://www.scribd.com/embeds/123123/content?start_page=1&view_mode=list&access_key=" );
     test_good_url( "http://www.slideshare.net/slideshow/embed_code/12312312" );
     test_good_url( "http://w.soundcloud.com/player/?url=http%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F23318382&show_artwork=true" );

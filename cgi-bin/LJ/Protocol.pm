@@ -23,8 +23,6 @@ use LJ::Event::JournalNewEntry;
 use LJ::Event::AddedToCircle;
 use LJ::Entry;
 use LJ::Poll;
-use LJ::EventLogRecord::NewEntry;
-use LJ::EventLogRecord::EditEntry;
 use LJ::Config;
 use LJ::Comment;
 
@@ -1430,6 +1428,11 @@ sub postevent
             $res_done = 1;   # tell caller to bail out
             return;
         }
+
+        # If we're the importer, don't do duplicate detection here; the importer already
+        # has tooling to do that to compare remote vs local
+        return if $importer_bypass;
+
         my @parts = split(/:/, $u->{'dupsig_post'});
         if ($parts[0] eq $dupsig) {
             # duplicate!  let's make the client think this was just the
@@ -1635,9 +1638,11 @@ sub postevent
             $logtag_opts->{set_string} = $taginput;
         }
 
-        my $rv = LJ::Tags::update_logtags($uowner, $jitemid, $logtag_opts);
-        return fail($err,157,$tagerr) unless $rv;
-        # the next line will propagate any "skippable" errors
+        # Do not fail here; worst case we lose tags, but if we fail here we don't perform
+        # half of the processing below
+        LJ::Tags::update_logtags($uowner, $jitemid, $logtag_opts);
+
+        # Propagate any "skippable" errors
         $res->{message} = $tagerr if $tagerr;
     }
 
@@ -1734,7 +1739,6 @@ sub postevent
         # latest posts feed update
         DW::LatestFeed->new_item( $entry );
     }
-    push @jobs, LJ::EventLogRecord::NewEntry->new($entry)->fire_job;
 
     # update the sphinx search engine
     if ( @LJ::SPHINX_SEARCHD && !$importer_bypass ) {
@@ -1749,6 +1753,11 @@ sub postevent
         my @handles = $sclient->insert_jobs(@jobs);
         # TODO: error on failure?  depends on the job I suppose?  property of the job?
     }
+
+    # To minimize impact on legacy code, let's make sure the entry object in
+    # memory has been populated with data. Easiest way to do that is to call
+    # one of the methods that loads the relevant row from the database.
+    $entry->valid;
 
     return $res;
 }
@@ -2158,7 +2167,7 @@ sub editevent
     # present, we leave the slug alone.
     if ( exists $req->{slug} ) {
         LJ::MemCache::delete( [ $ownerid, "logslug:$ownerid:$itemid" ] );
-        $uowner->do( 'DELETE FROM logslugs WHERE journalid = ? AND jitemid = ?',
+        $u->do( 'DELETE FROM logslugs WHERE journalid = ? AND jitemid = ?',
                      undef, $ownerid, $itemid );
 
         my $slug = LJ::canonicalize_slug( $req->{slug} );
@@ -2179,8 +2188,6 @@ sub editevent
         $res->{'anum'} = $oldevent->{'anum'};
         $res->{'url'} = $entry->url;
     }
-
-    LJ::EventLogRecord::EditEntry->new($entry)->fire;
 
     DW::Stats::increment( 'dw.action.entry.edit', 1,
             [ 'journal_type:' . $uowner->journaltype_readable ] );

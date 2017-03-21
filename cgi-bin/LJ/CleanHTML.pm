@@ -1696,7 +1696,7 @@ sub break_word {
     # the last punctuation point; otherwise it will be placed at the maximum
     # length of the unbroken word as defined by $at.
 
-    while ( $word =~ s/((?:$onechar){$at})// ) {
+    while ( $word =~ s/^((?:$onechar){$at})// ) {
         $chunk = $1;
 
         # Edge case: if the next character would be whitespace, we
@@ -1760,7 +1760,7 @@ sub clean_as_markdown {
             return qq|\@$user.$site|;
         }
     };
-    $$ref =~ s/(?<=\W)\@([\w\d_-]+)(?:\.([\w\d\.]+))?(?=$|\W)/$usertag->($1, $2)/mge;
+    $$ref =~ s!(?<=[^\w/])\@([\w\d_-]+)(?:\.([\w\d\.]+))?(?=$|\W)!$usertag->($1, $2)!mge;
 
     return 1;
 }

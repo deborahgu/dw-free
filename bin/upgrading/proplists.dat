@@ -406,14 +406,6 @@ userproplist.exclude_from_own_stats:
   multihomed: 0
   prettyname: Exclude from self journal stats
 
-userproplist.external_foaf_url:
-  cldversion: 4
-  datatype: char
-  des: Location of External FOAF file
-  indexed: 0
-  multihomed: 0
-  prettyname: FOAF address
-
 userproplist.ffnet:
   cldversion: 4
   datatype: char
@@ -613,14 +605,6 @@ userproplist.latest_optout:
   indexed: 0
   multihomed: 0
   prettyname: Latest Updates Opt Out
-
-userproplist.mailencoding:
-  cldversion: 4
-  datatype: num
-  des: Encoding in which to mail comments to the user. Defaults to UTF-8.
-  indexed: 0
-  multihomed: 0
-  prettyname: Mail Encoding
 
 userproplist.moderated:
   cldversion: 4

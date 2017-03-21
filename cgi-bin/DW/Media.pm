@@ -25,6 +25,7 @@ use Carp qw/ croak confess /;
 use File::Type;
 use Image::Size;
 
+use DW::BlobStore;
 use DW::Media::Photo;
 
 use constant TYPE_PHOTO => 1;
@@ -74,10 +75,6 @@ sub upload_media {
         unless $opts{user} && LJ::isu( $opts{user} );
     confess 'Need a file key or data key'
         unless $opts{file} && -e $opts{file} || $opts{data};
-
-    # we need a mogilefs client or we can't store media
-    my $mog = LJ::mogclient()
-        or croak 'Sorry, MogileFS is not currently available.';
 
     # okay, we know who it's for and what it is, that's all we really need.
     if ( $opts{file} ) {
@@ -130,13 +127,11 @@ sub upload_media {
     # to avoid having database rows for an image that failed to upload,
     # do the upload first - we can create a fake object to get the mogkey
 
-    # FIXME: have different MogileFS classes for different media types
+    # FIXME: have different storage classes for different media types
 
     my $fakeobj = bless { userid => $opts{user}->id, versionid => $id }, 'DW::Media::Photo';
-    my $fh = $mog->new_file( $fakeobj->mogkey, 'media' )
-        or croak 'Unable to instantiate file in MogileFS.';
-    $fh->print( $opts{data} );
-    $fh->close or croak 'Unable to save file to MogileFS.';
+    DW::BlobStore->store( media => $fakeobj->mogkey, \$opts{data} )
+        or croak 'Failed to upload file to storage.';
 
     # now update the database tables
     $opts{user}->do(
@@ -217,5 +212,42 @@ sub get_active_for_user {
     return sort { $b->logtime <=> $a->logtime } @media;
 }
 
+sub get_quota_for_user {
+    my ( $class, $u ) = @_;
+    confess 'Invalid user' unless LJ::isu( $u );
+
+    my $cap = $u->get_cap( 'media_file_quota' ) // 0;
+
+    # convert megabytes -> bytes
+    return $cap * 1024 * 1024;
+}
+
+sub get_usage_for_user {
+    my ( $class, $u ) = @_;
+    confess 'Invalid user' unless LJ::isu( $u );
+
+    my ( $usage ) = $u->selectrow_array(
+        q{SELECT SUM(mv.filesize) FROM media_versions AS mv, media AS m
+          WHERE mv.userid=? AND m.userid=mv.userid AND m.mediaid=mv.mediaid
+          AND m.state = 'A'
+         },
+        undef, $u->id
+    );
+    croak 'Failed to get file sizes: ' . $u->errstr . '.' if $u->err;
+    $usage //= 0;
+    return $usage;  # in bytes
+}
+
+
+package LJ::User;
+
+sub can_upload_media {
+    my ( $u ) = @_;
+    return 0 if $u->is_identity;
+
+    my $quota = DW::Media->get_quota_for_user( $u );
+    my $usage = DW::Media->get_usage_for_user( $u );
+    return $usage > $quota ? 0 : 1;
+}
 
 1;

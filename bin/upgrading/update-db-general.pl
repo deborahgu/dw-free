@@ -601,7 +601,7 @@ CREATE TABLE userpic2 (
     comment varchar(255) BINARY NOT NULL default '',
     description varchar(255) BINARY NOT NULL default '',
     flags tinyint(1) unsigned NOT NULL default 0,
-    location enum('blob','disk','mogile') default NULL,
+    location enum('blob','disk','mogile','blobstore') default NULL,
 
     PRIMARY KEY  (userid, picid)
 )
@@ -665,15 +665,6 @@ CREATE TABLE userpropblob (
     value blob,
 
     PRIMARY KEY (userid,upropid)
-)
-EOC
-
-register_tablecreate("backupdirty", <<'EOC');
-CREATE TABLE backupdirty (
-    userid INT(10) unsigned NOT NULL default '0',
-    marktime INT(10) unsigned NOT NULL default '0',
-
-    PRIMARY KEY (userid)
 )
 EOC
 
@@ -915,6 +906,8 @@ register_tabledrop("pollproplist2");
 register_tabledrop("dirsearchres2");
 register_tabledrop("txtmsg");
 register_tabledrop("comm_promo_list");
+register_tabledrop("incoming_email_handle");
+register_tabledrop("backupdirty");
 
 
 register_tablecreate("infohistory", <<'EOC');
@@ -2244,15 +2237,6 @@ CREATE TABLE dirmogsethandles (
     exptime  INT UNSIGNED NOT NULL,
 
     INDEX    (exptime)
-)
-EOC
-
-register_tablecreate("incoming_email_handle", <<'EOC');
-CREATE TABLE incoming_email_handle (
-    ieid     INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    timerecv INT UNSIGNED NOT NULL DEFAULT '0',
-
-    PRIMARY KEY  (ieid)
 )
 EOC
 
@@ -4052,7 +4036,7 @@ EOF
                         userid => $row->{userid},
                         versionid => $row->{mediaid}
                 );
-                my $imagedata = LJ::mogclient()->get_file_data( $media_file->mogkey );
+                my $imagedata = DW::BlobStore->retrieve( media => $media_file->mogkey );
                 my ( $width, $height ) = Image::Size::imgsize( $imagedata );
                 unless (defined $width && defined $height) {
                     $failed++;
@@ -4099,6 +4083,14 @@ EOF
     if ( column_type( 'user', 'txtmsg_status' ) ) {
         do_alter( 'user',
                   "ALTER TABLE user DROP COLUMN txtmsg_status" );
+    }
+
+    unless ( column_type( 'userpic2', 'location' ) =~ /blobstore/ ) {
+        do_alter( 'userpic2',
+            q{ALTER TABLE userpic2
+            MODIFY COLUMN location ENUM('blob', 'disk', 'mogile', 'blobstore')
+            DEFAULT NULL}
+        );
     }
 
 });
